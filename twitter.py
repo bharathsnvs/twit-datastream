@@ -7,6 +7,10 @@ import numpy as np
 import pandas as pd
 
 import credentials
+import smtplib
+from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 ### AUTHENTICATE ###
 class TwitterAuthenticator():
@@ -92,8 +96,8 @@ class TweetAnalyzer():
         df = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=["tweets"])
 
         
-        df['id'] = np.array([tweet.id for tweet in tweets])
-        df['len'] = np.array([len(tweet.text) for tweet in tweets])
+        #df['id'] = np.array([tweet.id for tweet in tweets])
+        #df['len'] = np.array([len(tweet.text) for tweet in tweets])
         
         df['date'] = np.array([tweet.created_at for tweet in tweets])
         df['source'] = np.array([tweet.source for tweet in tweets])
@@ -102,6 +106,11 @@ class TweetAnalyzer():
 
         return df 
     
+#### EMAIL SETUP ####
+
+
+
+#####
 
 
 if __name__ == "__main__":
@@ -115,7 +124,7 @@ if __name__ == "__main__":
     tweets_array = []
     name_list = ["naval", "paulg", "elonmusk"]
     for i in name_list:
-        tweets = api.user_timeline(screen_name=i, count=20)
+        tweets = api.user_timeline(screen_name=i, count=10)
         tweets_array = tweets_array + tweets
         # for tweet in tweets:
         #     if tweet.retweet_count > 100:
@@ -124,7 +133,7 @@ if __name__ == "__main__":
         #         None
     
     # # #
-
+    print(tweets_array)
     # Below line prints out what features of a tweet we can extract
     #print(dir(tweets[0]))
     
@@ -133,7 +142,27 @@ if __name__ == "__main__":
     #tweets = api.user_timeline(screen_name='paulg', count=10)
 
     #######
+
     df = tweet_analyzer.tweets_to_df(tweets_array)
+
+    msg = EmailMessage()
+
+    recipients = ['bharathsnvs@gmail.com', 'anand.waghmare_asp21@ashoka.edu.in']
+    sender = "usalresearchteam@gmail.com"
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = 'Handpicked automated twitter stream'
+    msg['From'] = "usalresearchteam@gmail.com"
+    msg['To'] = ", ".join(recipients)
+    html = df.to_html()
+    HTML_BODY = MIMEText(html, 'html')
+    msg.attach(HTML_BODY)
+
+    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+    server.login("usalresearchteam@gmail.com", "vkbs1818")
+    server.sendmail(sender, recipients, msg.as_string())
+
+    server.quit()
 
     print(df)
 
